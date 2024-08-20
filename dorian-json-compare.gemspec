@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = "dorian-json-compare"
-  s.version = "0.0.2"
+  s.version = File.read("VERSION").strip
   s.summary = "compare multiple json files"
   s.description = s.summary
   s.authors = ["Dorian Marié"]
