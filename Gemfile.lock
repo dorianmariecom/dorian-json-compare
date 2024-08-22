@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dorian-json-compare (0.0.2)
+    dorian-json-compare (0.0.3)
       dorian-arguments
       json
 
