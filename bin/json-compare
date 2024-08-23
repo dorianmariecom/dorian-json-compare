@@ -1,12 +1,64 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-if ARGV.size != 1 || ARGV[0] == "--help" || ARGV[0] == "-h"
-  puts "USAGE: ... | each CODE"
-  exit
+require "json"
+require "dorian/to_struct"
+require "dorian/arguments"
+require "stringio"
+
+def compare(hash1, hash2, current: "")
+  if hash1.is_a?(Array)
+    hash1.each.with_index { |_, i| compare(hash1[i], hash2[i], current:) }
+  elsif hash1.is_a?(String) || hash2.is_a?(String)
+    if !hash1.is_a?(String)
+      puts "key \"#{current}\" is a string in #{ARGV[1]}"
+    elsif !hash2.is_a?(String)
+      puts "key \"#{current}\" is a string in #{ARGV[0]}"
+    end
+  else
+    (hash1.keys + hash2.keys).uniq.each do |key|
+      full_key = [current, key].reject(&:empty?).join(".")
+      if !hash1.key?(key)
+        puts "missing key \"#{full_key}\" from #{ARGV[0]}"
+      elsif !hash2.key?(key)
+        puts "missing key \"#{full_key}\" from #{ARGV[1]}"
+      else
+        compare(hash1[key], hash2[key], current: full_key)
+      end
+    end
+  end
 end
 
-$stdin.each_line do |it|
-  it.strip!
-  eval(ARGV.first)
+def with_captured_stdout(&block)
+  original_stdout = $stdout
+  $stdout = StringIO.new
+  block.call
+  $stdout.string
+ensure
+  $stdout = original_stdout
 end
+
+parsed =
+  Dorian::Arguments.parse(
+    version: {
+      alias: :v
+    },
+    help: {
+      alias: :h
+    }
+  )
+
+abort parsed.help if parsed.options.help
+
+if parsed.options.version
+  abort File.read(File.expand_path("../../VERSION", __FILE__))
+end
+
+file1, file2 = parsed.files.map { |file| JSON.parse(File.read(file)) }
+root1, root2 = parsed.arguments
+file1 = file1[root1] if root1
+file2 = file2[root2] if root2
+
+output = with_captured_stdout { compare(file1, file2) }
+
+abort output unless output.empty?
