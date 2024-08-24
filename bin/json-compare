@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require "json"
-require "dorian/to_struct"
 require "dorian/arguments"
 require "stringio"
 
