@@ -8,6 +8,6 @@ RSpec.describe "json-compare" do
 
     expect(
       `bin/json-compare package.json package.json engines 2>&1`
-    ).to_not be_empty
+    ).not_to be_empty
   end
 end
